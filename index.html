@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#111514">
+  <meta name="description" content="Game balap vektor untuk Fisika SMA kelas XI. Pilih komponen perpindahan dan taklukkan tiga lintasan.">
+  <title>Vector Racer · Fisika XI</title>
+  <link rel="stylesheet" href="./styles.css">
+  <script type="module" src="./app.js"></script>
+</head>
+<body>
+  <header class="topbar" id="atas">
+    <div class="topbar-inner shell">
+      <a class="brand" href="#atas"><span class="brand-mark" aria-hidden="true">↗</span> VECTOR<span>RACER</span></a>
+      <a class="rank-link" href="#peringkat"><span aria-hidden="true">▤</span> Peringkat <span aria-hidden="true">↘</span></a>
+    </div>
+  </header>
+  <main class="shell">
+    <div class="intro">
+      <p class="eyebrow"><span class="status-dot"></span> FISIKA / KELAS XI</p>
+      <h1>VECTOR <em>RACER</em></h1>
+      <p>Atur komponen perpindahan dan bidik garis finis.</p>
+      <p class="student-credit">Jeff Alvern Laurentius/08/XIB</p>
+    </div>
+
+    <nav class="track-list" aria-label="Pilih lintasan" id="tracks"></nav>
+
+    <div class="race-layout">
+      <section class="panel track-panel" aria-labelledby="track-title">
+        <div class="panel-head">
+          <div><p class="eyebrow" id="track-tag"></p><h2 id="track-title"></h2></div>
+          <button class="secondary reset" type="button" id="reset"><span aria-hidden="true">↺</span> Ulang</button>
+        </div>
+        <div class="board-wrap">
+          <canvas id="board" width="1000" height="718" role="img" aria-label="Lintasan pada bidang koordinat"></canvas>
+        </div>
+        <div class="track-footer">
+          <ul class="legend" aria-label="Legenda lintasan">
+            <li><i class="symbol start" aria-hidden="true"></i> Start</li>
+            <li><i class="symbol finish" aria-hidden="true"></i> Finis</li>
+            <li><i class="symbol check" aria-hidden="true"></i> Checkpoint</li>
+            <li><i class="symbol wall" aria-hidden="true"></i> Tembok</li>
+            <li><i class="symbol arrow" aria-hidden="true">→</i> Vektor</li>
+          </ul>
+          <p class="scale">1 petak = 1 m · +x → · +y ↑</p>
+        </div>
+      </section>
+
+      <section class="panel control-panel" aria-labelledby="control-title">
+        <div class="control-head">
+          <p class="eyebrow"><span class="status-dot"></span> KENDALI BALAP</p>
+          <h2 id="control-title">Atur vektor</h2>
+        </div>
+        <p class="track-hint" id="hint"></p>
+        <div class="stats">
+          <div><span>Posisi mobil</span><strong id="position">(0, 0)</strong></div>
+          <div><span>Langkah</span><strong id="step-count">0</strong></div>
+        </div>
+        <div class="checkpoint-progress" id="checkpoint-progress" hidden></div>
+        <div class="axis-control">
+          <div><strong>Δx</strong><span>kiri / kanan</span></div>
+          <div class="stepper">
+            <button type="button" data-axis="x" data-change="-1" aria-label="Kurangi Δx">−</button>
+            <output id="dx">0</output>
+            <button type="button" data-axis="x" data-change="1" aria-label="Tambah Δx">+</button>
+          </div>
+        </div>
+        <div class="axis-control">
+          <div><strong>Δy</strong><span>bawah / atas</span></div>
+          <div class="stepper">
+            <button type="button" data-axis="y" data-change="-1" aria-label="Kurangi Δy">−</button>
+            <output id="dy">0</output>
+            <button type="button" data-axis="y" data-change="1" aria-label="Tambah Δy">+</button>
+          </div>
+        </div>
+        <div class="preview">
+          <div><span>Tujuan</span><strong id="destination">(0, 0)</strong></div>
+          <div><span>Panjang panah</span><strong id="length">0 m</strong></div>
+        </div>
+        <button class="primary run" type="button" id="run"><span>Jalankan</span><span aria-hidden="true">↗</span></button>
+        <p id="feedback" class="feedback" role="status" aria-live="polite"></p>
+      </section>
+    </div>
+
+    <section class="panel result" id="result" hidden aria-labelledby="result-title">
+      <div class="result-main">
+        <p class="eyebrow"><span class="status-dot"></span> GARIS FINIS</p>
+        <h2 id="result-title" tabindex="-1">Balapan selesai</h2>
+        <p id="result-equation" class="equation"></p>
+        <div class="stats result-stats" id="result-stats"></div>
+        <details open><summary>Perpindahan tiap langkah</summary><ol id="moves"></ol></details>
+        <p class="physics">Pada rute yang berbelok, besar resultan perpindahan lebih kecil daripada total panjang lintasan, yaitu jumlah jarak tiap langkah.</p>
+      </div>
+      <div class="result-actions">
+        <form id="score-form">
+          <label for="nickname">Nama panggilan</label>
+          <input id="nickname" name="nickname" type="text" maxlength="20" minlength="2" placeholder="Contoh: Racer07" autocomplete="nickname" required>
+          <button class="secondary" id="save" type="submit">Simpan skor online <span aria-hidden="true">↗</span></button>
+          <p id="save-status" class="feedback" role="status"></p>
+        </form>
+        <button class="primary" id="next" type="button"></button>
+      </div>
+    </section>
+
+    <section class="panel ranking" id="peringkat" aria-labelledby="rank-title">
+      <div class="panel-head rank-head">
+        <div><p class="eyebrow">LEADERBOARD</p><h2 id="rank-title">Peringkat online</h2></div>
+        <div class="rank-actions">
+          <label class="sr-only" for="rank-level">Lintasan peringkat</label>
+          <select id="rank-level"></select>
+          <button class="secondary refresh" id="refresh" type="button" aria-label="Muat ulang peringkat" title="Muat ulang peringkat">↻</button>
+        </div>
+      </div>
+      <p class="rank-status" id="rank-status" role="status"></p>
+      <table id="rank-table" hidden>
+        <thead><tr><th scope="col">Pos.</th><th scope="col">Pembalap</th><th scope="col">Langkah</th><th scope="col">Waktu</th></tr></thead>
+        <tbody id="rank-body"></tbody>
+      </table>
+    </section>
+  </main>
+  <footer class="shell page-footer"><span>VECTOR RACER</span><span>PERPINDAHAN VEKTOR · FISIKA XI</span></footer>
+</body>
+</html>

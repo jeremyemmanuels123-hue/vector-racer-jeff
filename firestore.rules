@@ -1,0 +1,32 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function rankedTrack(level) {
+      return level in ['level-1', 'level-2', 'level-3'];
+    }
+
+    function minimumSteps(level) {
+      return level == 'level-1' ? 4 : (level == 'level-2' ? 3 : 5);
+    }
+
+    function validScore(level, scoreId, data) {
+      return rankedTrack(level)
+        && scoreId.matches('^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$')
+        && request.auth != null
+        && request.auth.token.firebase.sign_in_provider == 'anonymous'
+        && data.keys().hasAll(['level', 'steps', 'nickname', 'createdAt'])
+        && data.keys().hasOnly(['level', 'steps', 'nickname', 'createdAt'])
+        && data.level == level
+        && data.steps is int && data.steps >= minimumSteps(level) && data.steps <= 300
+        && data.nickname is string && data.nickname.matches('^[A-Za-z0-9][A-Za-z0-9 _.-]{1,19}$')
+        && data.createdAt == request.time;
+    }
+
+    match /tracks/{level}/scores/{scoreId} {
+      allow get: if rankedTrack(level);
+      allow list: if rankedTrack(level) && request.query.limit != null && request.query.limit <= 10;
+      allow create: if validScore(level, scoreId, request.resource.data);
+      allow update, delete: if false;
+    }
+  }
+}
